@@ -1,3 +1,4 @@
+
 name: build-dev
 
 on:
@@ -14,21 +15,42 @@ jobs:
     container: espressif/idf:v6.1.1
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           submodules: recursive
 
-      - name: Build
+      - name: Build ESP32-S3 firmware
         shell: bash
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          . $IDF_PATH/export.sh
+
+          echo "Initializing ESP-IDF..."
+          . "$IDF_PATH/export.sh"
+
+          echo "Setting ESP32-S3 target..."
           idf.py set-target esp32s3
+
+          echo "Starting firmware build..."
           idf.py build
 
-          cp build/esp32-remote.bin remote-${GITHUB_REF_NAME}.bin
+          echo "Checking generated firmware..."
+          ls -lh build/
+
+          if [ ! -f build/esp32-remote.bin ]; then
+            echo "ERROR: esp32-remote.bin was not generated!"
+            find build -type f -name "*.bin"
+            exit 1
+          fi
+
+          cp build/esp32-remote.bin "remote-${GITHUB_REF_NAME}.bin"
+
+          echo "Firmware ready:"
+          ls -lh remote-*.bin
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: remote-*.bin
+          fail_on_unmatched_files: true
+          generate_release_notes: true
