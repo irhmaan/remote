@@ -31,6 +31,8 @@ static const char *TAG = "ESP32-Remote";
 #define KEY_NEXT 10
 #define KEY_PREV 11
 
+// TODO: adding to test ci build on dev branch. Remove later.
+
 typedef struct
 {
     TaskHandle_t task_hdl;
